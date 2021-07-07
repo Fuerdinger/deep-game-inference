@@ -1,0 +1,20 @@
+# user folder files
+raw_data/*
+seeded_data/*
+models/*
+
+# exceptions for example files
+!raw_data/example_games.csv
+!seeded_data/example_data.json
+!models/example_model.pt
+
+# config files
+pyvenv.cfg
+.python-version
+rawg_info.json
+
+# config/misc directories
+.idea/
+Lib/
+Scripts/
+__pycache__/

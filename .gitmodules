@@ -1,0 +1,4 @@
+[submodule "rawg"]
+	path = rawg
+	url = https://gitlab.com/Fuerdinger/rawg-python-wrapper/
+	branch = scripts_only
