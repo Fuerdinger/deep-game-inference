@@ -40,8 +40,8 @@ def loss_batch(model, loss_func, xb, yb, opt=None):
 		opt.zero_grad()
 	return loss.item(), len(xb)
 
-# taken from https://pytorch.org/tutorials/beginner/nn_tutorial.html
-def fit(epochs, model, loss_func, opt, train_dl, valid_dl):
+# taken mostly from https://pytorch.org/tutorials/beginner/nn_tutorial.html
+def fit(shuffles, epochs, model, loss_func, opt, train_dl, valid_dl):
 	for epoch in range(epochs):
 		model.train()
 		for xb, yb in train_dl:
@@ -51,7 +51,7 @@ def fit(epochs, model, loss_func, opt, train_dl, valid_dl):
 		with torch.no_grad():
 			losses, nums = zip(*[loss_batch(model, loss_func, xb, yb) for xb, yb in valid_dl])
 		val_loss = np.sum(np.multiply(losses, nums)) / np.sum(nums)
-		print(epoch, val_loss)
+		print(shuffles, epoch, val_loss)
 		
 # taken mostly from https://pytorch.org/tutorials/beginner/nn_tutorial.html
 def get_data(train_ds, valid_ds, bs, vs):
@@ -70,8 +70,9 @@ if __name__ == '__main__':
 	parser.add_argument("--input", required=False, help="name of the game data file to use for training", default="seeded_data/data.json")
 	parser.add_argument("--output", required=False, help="name of the model to output", default="models/model.pt")
 	parser.add_argument("--batch_size", required=False, help="batch size for training. Use smaller batches for smaller datasets!", default=32)
-	parser.add_argument("--validity_size", required=False, help="size of the validity batch which loss will be calculated on", default=128)
-	parser.add_argument("--epochs", required=False, help="the number of epochs to train for", default=1000)
+	parser.add_argument("--validity_size", required=False, help="size of the validity batch which loss will be calculated on", default=64)
+	parser.add_argument("--shuffles", required=False, help="the number of validity set shuffles (num evolutions = shuffles * epochs)", default=2)
+	parser.add_argument("--epochs", required=False, help="the number of epochs to train for (num evolutions = shuffles * epochs)", default=1000)
 	parser.add_argument("--learning_rate", required=False, help="the learning rate for training", default=0.000001)
 	args = parser.parse_args()
 	
@@ -84,15 +85,18 @@ if __name__ == '__main__':
 	num_genres = len(map_json["genres"].keys())
 	num_esrb_ratings = len(map_json["esrb_ratings"])
 	sizes = (num_series, num_genres, num_esrb_ratings)
-	train_ds, valid_ds = get_data_sets(games_json, sizes)
 	
 	bs = int(args.batch_size)
 	vs = int(args.validity_size)
 	lr = float(args.learning_rate)  # learning rate
 	epochs = int(args.epochs)  # how many epochs to train for
-	train_dl, valid_dl = get_data(train_ds, valid_ds, bs, vs)
+	shuffles = int(args.shuffles)
 	model, opt = get_model(sizes, lr)
-	fit(epochs, model, torch.nn.L1Loss(), opt, train_dl, valid_dl)
+	
+	for i in range(0, shuffles):
+		train_ds, valid_ds = get_data_sets(games_json, sizes)
+		train_dl, valid_dl = get_data(train_ds, valid_ds, bs, vs)
+		fit(i, epochs, model, torch.nn.L1Loss(), opt, train_dl, valid_dl)
 	
 	print("Saving to " + args.output)
 	if os.path.exists(args.output):
