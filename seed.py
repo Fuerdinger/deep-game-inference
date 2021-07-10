@@ -146,6 +146,6 @@ def create_games(input, output):
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--input", required=False, help="input .csv file to seed games for", default="raw_data/games.csv")
-	parser.add_argument("--output", required=False, help="name (without extension) of the two files to output", default="seeded_data/seeded_data.json")
+	parser.add_argument("--output", required=False, help="name (without extension) of the two files to output", default="seeded_data/data.json")
 	args = parser.parse_args()
 	create_games(args.input, args.output)
